@@ -1,0 +1,14 @@
+{
+    "twitter": 
+    {
+        "api_key": "twitterkeytwitterkey", 
+        "api_secret": "twittersecrettwittersecret"
+    },
+    "reddit":
+    {
+        "username": "redditusernameredditusername",
+        "password": "redditpasswordredditpassword",
+        "api_key": "redditkeyredditkey",
+        "api_secret": "redditsecretredditsecret"
+    }
+}

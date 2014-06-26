@@ -33,7 +33,7 @@ class TwitterClient(object):
     def get_connections(self, screen_name):
         follower_data = self.get_followers(screen_name)
         followers = map(lambda x: { 'provider': 'twitter', 'task': 'profile', 'target': x }, follower_data['ids'])
-        print(followers)
+        #print(followers)
         result = followers
         return result
         

@@ -12,7 +12,7 @@ class TwitterClient(object):
         headers = { 
             'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
             'Authorization': auth_header
-        }            
+        }
         connection = httplib.HTTPSConnection('api.twitter.com')
         connection.request('POST', '/oauth2/token', body, headers)
         response = connection.getresponse()
@@ -24,11 +24,28 @@ class TwitterClient(object):
             print('{0} {1}'.format(response.status, response.reason))
         connection.close()
        
-    def get_profile(self, screen_name):
-        return self.make_request('GET', '/1.1/users/show.json', { 'screen_name': screen_name, 'stringify_ids': True })
+    def get_profile(self, target):
+        if target.isdigit():
+            return self.make_request('GET', '/1.1/users/show.json', { 'user_id': target, 'stringify_ids': True })
+        else:
+            return self.make_request('GET', '/1.1/users/show.json', { 'screen_name': target, 'stringify_ids': True })
         
-    def get_followers(self, screen_name):
-        return self.make_request('GET', '/1.1/followers/ids.json', { 'screen_name': screen_name, 'stringify_ids': True })
+    def get_connections(self, screen_name):
+        follower_data = self.get_followers(screen_name)
+        followers = map(lambda x: { 'provider': 'twitter', 'task': 'profile', 'target': x }, follower_data['ids'])
+        print(followers)
+        result = followers
+        return result
+        
+    def get_text(self, screen_name):
+        pass
+        # bio, tweets
+        
+    def get_followers(self, target):
+        if target.isdigit():
+            return self.make_request('GET', '/1.1/followers/ids.json', { 'user_id': target, 'stringify_ids': True })
+        else:
+            return self.make_request('GET', '/1.1/followers/ids.json', { 'screen_name': target, 'stringify_ids': True })
         
     def get_lists(self, screen_name):
         return self.make_request('GET', '/1.1/lists/list.json', { 'screen_name': screen_name })

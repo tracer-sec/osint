@@ -1,5 +1,6 @@
 import sys
 import socket
+import re
 
 # Thanks NirSoft - http://www.nirsoft.net/whois_servers_list.html
 
@@ -177,20 +178,31 @@ SERVERS = {
     'za.com': 'whois.centralnic.com'
 }
 
-def lookup(target):
+def lookup(target, server, recurse=False):
     target = target.lower()
     tld = filter(lambda x: target.endswith(x), SERVERS.keys())[0]
-    server = SERVERS[tld]
+    if server is None:
+        server = SERVERS[tld]
     
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((server, 43))
     s.send(target + '\r\n')
-    data = s.recv(4096)
+    data = ''
+    d = s.recv(4096)
+    while d:
+        data = data + d
+        d = s.recv(4096)
     s.close()
+    
+    if recurse:
+        next_server = re.search('^\s*whois server:\s*([a-z0-9.]+)$', data, re.MULTILINE | re.IGNORECASE)
+        if next_server is not None:
+            data = lookup(target, next_server.group(1), False)
     
     return data
 
 if __name__ == '__main__':
     target = sys.argv[1]
-    print(lookup(target))
+    whois_server = sys.argv[2] if len(sys.argv) == 3 else None
+    print(lookup(target, whois_server, True))
     

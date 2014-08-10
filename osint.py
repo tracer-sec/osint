@@ -50,7 +50,10 @@ def process_data(data_queue):
     while(True):
         result = data_queue.get()
         print_s('d - {0}'.format(result))
-        d.add_profile(result['provider'], 'profile', result['target'], result['data'])
+        friendly_name = result['target']
+        if result['provider'] == 'twitter':
+            friendly_name = result['data']['screen_name']
+        d.add_profile(result['provider'], 'profile', friendly_name, result['data'])
         data_queue.task_done()
         
         

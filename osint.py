@@ -3,6 +3,7 @@
 import sys
 import json
 import threading
+import time
 import data
 import Queue
 import twitter
@@ -11,13 +12,16 @@ import whois
 
 visited = []
 node_limit = 5
+working_count = 0
     
 def get_job_key(job):
     return '{0}~{1}~{2}'.format(job['provider'], job['task'], job['target'])
 
 def process(job_queue, clients, data):
-    while not job_queue.empty():
-        job = job_queue.get()
+    global working_count
+    while not job_queue.empty() or working_count > 0:
+        working_count = working_count + 1
+        job = job_queue.get(True, 5)
         try:
             job_key = get_job_key(job)
             if job_key not in visited:
@@ -31,11 +35,16 @@ def process(job_queue, clients, data):
                     connection_key = get_job_key(connection)
                     if connection_key not in visited:
                         job_queue.put(connection)
+        except Queue.Empty:
+            pass # swallow it
         finally:
             job_queue.task_done()
+            working_count = working_count - 1
             
         if len(visited) >= node_limit:
             break
+        
+        time.sleep(0.5)
         
     # Empty queue so it returns control to calling thread
     while not job_queue.empty():

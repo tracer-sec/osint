@@ -26,14 +26,15 @@ def process(job_queue, clients, data):
             job_key = get_job_key(job)
             if job_key not in visited:
                 visited.append(job_key)
-                print_s(job)
+                #print_s(job)
                 result, id, name = clients[job['provider']].get_profile(job['target'])
-                data_queue.put({ 'provider': job['provider'], 'target': job['target'], 'data': result, 'id': id, 'name': name })
+                data_queue.put({ 'provider': job['provider'], 'target': job['target'], 'data': result, 'id': id, 'name': name, 'parent': job['parent'] })
 
                 connections = clients[job['provider']].get_connections(job['target'])
                 for connection in connections:
                     connection_key = get_job_key(connection)
                     if connection_key not in visited:
+                        connection['parent'] = job_key
                         job_queue.put(connection)
         except Queue.Empty:
             pass # swallow it
@@ -54,12 +55,12 @@ def process(job_queue, clients, data):
     print_s('Stopping thread')
         
         
-def process_data(data_queue):
-    d = data.Storage(target)
+def process_data(data_queue, target_name):
+    d = data.Storage(target_name)
     while(True):
         result = data_queue.get()
         #print_s('d - {0}'.format(result))
-        d.add_profile(result['provider'], 'profile', result['id'], result['name'], result['data'])
+        d.add_profile(result['provider'], 'profile', result['id'], result['name'], result['data'], result['parent'])
         data_queue.task_done()
         
         
@@ -77,19 +78,21 @@ if __name__ == '__main__':
     config = json.load(config_file)
     config_file.close()
     
-    target = sys.argv[1]
+    target_name = sys.argv[1]
 
     twitter = twitter.TwitterClient(config['twitter'])
     #reddit = reddit.RedditClient(config['reddit'])
     
     clients = { 'twitter': twitter }
     
+    target, target_id, target_name = twitter.get_profile(target_name)
+    
     job_queue = Queue.Queue()
-    job_queue.put({ 'provider': 'twitter', 'task': 'profile', 'target': target })
+    job_queue.put({ 'provider': 'twitter', 'task': 'profile', 'target': str(target_id), 'parent': None })
     data_queue = Queue.Queue()
     
     # 1 data thread
-    t = threading.Thread(name='data', target=process_data, args=[data_queue])
+    t = threading.Thread(name='data', target=process_data, args=[data_queue, target_name])
     t.daemon = True
     t.start()
     

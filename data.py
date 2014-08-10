@@ -10,17 +10,17 @@ class Storage(object):
         open(filename, 'a').close()
         self.connection = sqlite3.connect(filename)
         c = self.connection.cursor()
-        c.execute('CREATE TABLE profile (id INTEGER PRIMARY KEY, provider TEXT, query TEXT, name TEXT, data TEXT)')
+        c.execute('CREATE TABLE profile (id INTEGER PRIMARY KEY, provider TEXT, query TEXT, profile_id TEXT, name TEXT, data TEXT)')
         c.execute('CREATE TABLE connection (parent_id INTEGER, child_id INTEGER, data TEXT)')
         self.connection.commit()
         
     def __del__(self):
         self.connection.close()
         
-    def add_profile(self, provider, query, name, data):
-        params = (provider, query, name, json.dumps(data))
+    def add_profile(self, provider, query, profile_id, name, data):
+        params = (provider, query, profile_id, name, json.dumps(data))
         c = self.connection.cursor()
-        c.execute('INSERT INTO profile (provider, query, name, data) VALUES (?, ?, ?, ?)', params)
+        c.execute('INSERT INTO profile (provider, query, profile_id, name, data) VALUES (?, ?, ?, ?, ?)', params)
         self.connection.commit()
         return c.lastrowid
         

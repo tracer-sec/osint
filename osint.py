@@ -27,8 +27,8 @@ def process(job_queue, clients, data):
             if job_key not in visited:
                 visited.append(job_key)
                 print_s(job)
-                result = clients[job['provider']].get_profile(job['target'])
-                data_queue.put({ 'provider': job['provider'], 'target': job['target'], 'data': result })
+                result, id, name = clients[job['provider']].get_profile(job['target'])
+                data_queue.put({ 'provider': job['provider'], 'target': job['target'], 'data': result, 'id': id, 'name': name })
 
                 connections = clients[job['provider']].get_connections(job['target'])
                 for connection in connections:
@@ -58,11 +58,8 @@ def process_data(data_queue):
     d = data.Storage(target)
     while(True):
         result = data_queue.get()
-        print_s('d - {0}'.format(result))
-        friendly_name = result['target']
-        if result['provider'] == 'twitter':
-            friendly_name = result['data']['screen_name']
-        d.add_profile(result['provider'], 'profile', friendly_name, result['data'])
+        #print_s('d - {0}'.format(result))
+        d.add_profile(result['provider'], 'profile', result['id'], result['name'], result['data'])
         data_queue.task_done()
         
         

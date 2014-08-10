@@ -26,9 +26,10 @@ class TwitterClient(object):
        
     def get_profile(self, target):
         if target.isdigit():
-            return self.make_request('GET', '/1.1/users/show.json', { 'user_id': target, 'stringify_ids': True })
+            result = self.make_request('GET', '/1.1/users/show.json', { 'user_id': target, 'stringify_ids': True })
         else:
-            return self.make_request('GET', '/1.1/users/show.json', { 'screen_name': target, 'stringify_ids': True })
+            result = self.make_request('GET', '/1.1/users/show.json', { 'screen_name': target, 'stringify_ids': True })
+        return result, result['id'], result['screen_name']
         
     def get_connections(self, screen_name):
         follower_data = self.get_followers(screen_name)

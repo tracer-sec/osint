@@ -18,14 +18,13 @@ def get_job_key(job):
     return '{0}~{1}~{2}'.format(job['provider'], job['task'], job['target'])
 
 def process(job_queue, clients, data):
-    global working_count
     while not job_queue.empty() or working_count > 0:
-        working_count = working_count + 1
+        inc_working_count()
         job = job_queue.get(True, 5)
         try:
             job_key = get_job_key(job)
             if job_key not in visited:
-                visited.append(job_key)
+                append_visited(job_key)
                 #print_s(job)
                 result, id, name = clients[job['provider']].get_profile(job['target'])
                 data_queue.put({ 'provider': job['provider'], 'target': job['target'], 'data': result, 'id': id, 'name': name, 'parent': job['parent'] })
@@ -40,7 +39,7 @@ def process(job_queue, clients, data):
             pass # swallow it
         finally:
             job_queue.task_done()
-            working_count = working_count - 1
+            dec_working_count()
             
         if len(visited) >= node_limit:
             break
@@ -65,12 +64,32 @@ def process_data(data_queue, target_name):
         
         
 write_lock = threading.Lock()
+working_count_lock = threading.Lock()
+visited_lock = threading.Lock()
+
+def inc_working_count():
+    global working_count
+    working_count_lock.acquire()
+    working_count = working_count + 1
+    working_count_lock.release()
         
+def dec_working_count():
+    global working_count
+    working_count_lock.acquire()
+    working_count = working_count - 1
+    working_count_lock.release()
+
 def print_s(s):
     thread_id = threading.current_thread().name
     write_lock.acquire()
     print('[{0}] {1}'.format(thread_id, s))
     write_lock.release()
+    
+def append_visited(key):
+    global visited
+    visited_lock.acquire()
+    visited.append(key)
+    visited_lock.release()
     
     
 if __name__ == '__main__':

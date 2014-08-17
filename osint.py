@@ -27,7 +27,7 @@ def process(job_queue, clients, data):
                 append_visited(job_key)
                 #print_s(job)
                 result, id, name = clients[job['provider']].get_profile(job['target'])
-                data_queue.put({ 'provider': job['provider'], 'target': job['target'], 'data': result, 'id': id, 'name': name, 'parent': job['parent'] })
+                data_queue.put({ 'provider': job['provider'], 'target': job['target'], 'data': result, 'id': id, 'name': name, 'parent': job['parent'], 'connection_type': job['connection_type'] })
 
                 connections = clients[job['provider']].get_connections(job['target'])
                 for connection in connections:
@@ -59,7 +59,7 @@ def process_data(data_queue, target_name):
     while(True):
         result = data_queue.get()
         #print_s('d - {0}'.format(result))
-        d.add_profile(result['provider'], 'profile', result['id'], result['name'], result['data'], result['parent'])
+        d.add_profile(result['provider'], 'profile', result['id'], result['name'], result['data'], result['parent'], result['connection_type'])
         data_queue.task_done()
         
         
@@ -107,7 +107,7 @@ if __name__ == '__main__':
     target, target_id, target_name = twitter.get_profile(target_name)
     
     job_queue = Queue.Queue()
-    job_queue.put({ 'provider': 'twitter', 'task': 'profile', 'target': str(target_id), 'parent': None })
+    job_queue.put({ 'provider': 'twitter', 'task': 'profile', 'target': str(target_id), 'parent': None, 'connection_type': None })
     data_queue = Queue.Queue()
     
     # 1 data thread

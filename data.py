@@ -17,7 +17,7 @@ class Storage(object):
     def __del__(self):
         self.connection.close()
         
-    def add_profile(self, provider, query, profile_id, name, data, parent):
+    def add_profile(self, provider, query, profile_id, name, data, parent, connection_type):
         params = (provider, query, profile_id, name, json.dumps(data))
         c = self.connection.cursor()
         c.execute('INSERT INTO profile (provider, query, profile_id, name, data) VALUES (?, ?, ?, ?, ?)', params)
@@ -28,7 +28,7 @@ class Storage(object):
             c.execute('SELECT id FROM profile WHERE provider = ? AND profile_id = ?', (parent_key[0], parent_key[2]))
             p = c.fetchone()     
             if p is not None:
-                c.execute('INSERT INTO connection (parent_id, child_id, data) VALUES (?, ?, ?)', (p[0], new_id, ''))
+                c.execute('INSERT INTO connection (parent_id, child_id, data) VALUES (?, ?, ?)', (p[0], new_id, connection_type))
         
         self.connection.commit()
         

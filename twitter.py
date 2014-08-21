@@ -32,10 +32,19 @@ class TwitterClient(object):
         return result, result['id'], result['screen_name']
         
     def get_connections(self, screen_name):
+        result = []
+    
+        try:
+            profile = self.get_profile(screen_name)[0]
+            url = profile['entities']['url']['urls'][0]['expanded_url']
+            result.append({ 'provider': 'web', 'task': 'profile', 'target': url, 'connection_type': 'twitter profile link' })
+        except:
+            pass # meh
+
         follower_data = self.get_followers(screen_name)
         followers = map(lambda x: { 'provider': 'twitter', 'task': 'profile', 'target': x, 'connection_type': 'twitter follower' }, follower_data['ids'])
-        #print(followers)
-        result = followers
+        result.extend(followers)        
+        
         return result
         
     def get_text(self, screen_name):

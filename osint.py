@@ -8,7 +8,7 @@ import data
 import Queue
 import twitter
 import reddit
-import whois
+import web
 
 visited = []
 node_limit = 5
@@ -101,8 +101,9 @@ if __name__ == '__main__':
 
     twitter = twitter.TwitterClient(config['twitter'])
     #reddit = reddit.RedditClient(config['reddit'])
+    web = web.WebClient()
     
-    clients = { 'twitter': twitter }
+    clients = { 'twitter': twitter, 'web': web }
     
     target, target_id, target_name = twitter.get_profile(target_name)
     

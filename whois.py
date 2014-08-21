@@ -178,7 +178,7 @@ SERVERS = {
     'za.com': 'whois.centralnic.com'
 }
 
-def lookup(target, server, recurse=False):
+def lookup(target, recurse=False, server=None):
     target = target.lower()
     tld = filter(lambda x: target.endswith(x), SERVERS.keys())[0]
     if server is None:
@@ -195,14 +195,14 @@ def lookup(target, server, recurse=False):
     s.close()
     
     if recurse:
-        next_server = re.search('^\s*whois server:\s*([a-z0-9.]+)$', data, re.MULTILINE | re.IGNORECASE)
+        next_server = re.search('^\s*whois server:\s*([a-z0-9.-]+)$', data, re.MULTILINE | re.IGNORECASE)
         if next_server is not None:
-            data = lookup(target, next_server.group(1), False)
+            data = lookup(target, False, next_server.group(1))
     
     return data
 
 if __name__ == '__main__':
     target = sys.argv[1]
     whois_server = sys.argv[2] if len(sys.argv) == 3 else None
-    print(lookup(target, whois_server, True))
+    print(lookup(target, True, whois_server))
     

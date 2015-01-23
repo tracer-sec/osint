@@ -6,9 +6,7 @@ import threading
 import time
 import data
 import Queue
-import twitter
-import reddit
-import web
+import plugins
 
 visited = []
 node_limit = 5
@@ -19,32 +17,32 @@ def get_job_key(job):
 
 def process(job_queue, clients, data):
     while not job_queue.empty() or working_count > 0:
-        inc_working_count()
-        job = job_queue.get(True, 5)
         try:
+            inc_working_count()
+            job = job_queue.get(True, 5)
             job_key = get_job_key(job)
             if job_key not in visited:
                 append_visited(job_key)
                 #print_s(job)
-                result, id, name = clients[job['provider']].get_profile(job['target'])
+                result, id, name = plugins.fetch[job['provider']].get_profile(job['target'])
                 data_queue.put({ 'provider': job['provider'], 'target': job['target'], 'data': result, 'id': id, 'name': name, 'parent': job['parent'], 'connection_type': job['connection_type'] })
 
-                connections = clients[job['provider']].get_connections(job['target'])
+                connections = plugins.fetch[job['provider']].get_connections(job['target'])
                 for connection in connections:
                     connection_key = get_job_key(connection)
                     if connection_key not in visited:
                         connection['parent'] = job_key
                         job_queue.put(connection)
         except Queue.Empty:
-            pass # swallow it
+            pass # swallow it - TODO: doesn't work
         finally:
-            job_queue.task_done()
+            job_queue.task_done() # TODO - what if we didn't get one?
             dec_working_count()
             
         if len(visited) >= node_limit:
             break
         
-        time.sleep(0.5)
+        time.sleep(2)
         
     # Empty queue so it returns control to calling thread
     while not job_queue.empty():
@@ -98,12 +96,8 @@ if __name__ == '__main__':
     config_file.close()
     
     target_name = sys.argv[1]
-
-    twitter = twitter.TwitterClient(config['twitter'])
-    #reddit = reddit.RedditClient(config['reddit'])
-    web = web.WebClient()
     
-    clients = { 'twitter': twitter, 'web': web }
+    plugins.load_all(config)
     
     target, target_id, target_name = twitter.get_profile(target_name)
     
@@ -116,9 +110,11 @@ if __name__ == '__main__':
     t.daemon = True
     t.start()
     
+    # Guess associated profiles?
+    
     # 4 worker threads
     for i in range(4):
-        t = threading.Thread(name=str(i), target=process, args=[job_queue, clients, data_queue])
+        t = threading.Thread(name=str(i), target=process, args=[job_queue, data_queue])
         t.daemon = True
         t.start()
         

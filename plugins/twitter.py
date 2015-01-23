@@ -7,6 +7,8 @@ import json
 class TwitterClient(object):
     def __init__(self, config):
         self.access_token = None
+        self.profile_cache = {}
+        
         auth_header = 'Basic ' + base64.b64encode(config['api_key'] + ':' + config['api_secret'])
         body = urllib.urlencode({ 'grant_type': 'client_credentials' })
         headers = { 
@@ -25,25 +27,35 @@ class TwitterClient(object):
         connection.close()
        
     def get_profile(self, target):
-        if target.isdigit():
-            result = self.make_request('GET', '/1.1/users/show.json', { 'user_id': target, 'stringify_ids': True })
+        if target in self.profile_cache:
+            result = self.profile_cache[target]
         else:
-            result = self.make_request('GET', '/1.1/users/show.json', { 'screen_name': target, 'stringify_ids': True })
+            if target.isdigit():
+                result = self.make_request('GET', '/1.1/users/show.json', { 'user_id': target, 'stringify_ids': True })
+            else:
+                result = self.make_request('GET', '/1.1/users/show.json', { 'screen_name': target, 'stringify_ids': True })
+            
+            # TODO: what if we have to look them up by id?
+            self.profile_cache[result['screen_name']] = result
         return result, result['id'], result['screen_name']
         
     def get_connections(self, screen_name):
         result = []
     
+        profile = self.get_profile(screen_name)[0]
         try:
-            profile = self.get_profile(screen_name)[0]
             url = profile['entities']['url']['urls'][0]['expanded_url']
             result.append({ 'provider': 'web', 'task': 'profile', 'target': url, 'connection_type': 'twitter profile link' })
-        except:
-            pass # meh
+        except Exception as e:
+            pass # profile didn't have an attached URL
 
         follower_data = self.get_followers(screen_name)
-        followers = map(lambda x: { 'provider': 'twitter', 'task': 'profile', 'target': x, 'connection_type': 'twitter follower' }, follower_data['ids'])
-        result.extend(followers)        
+        try:
+            followers = map(lambda x: { 'provider': 'twitter', 'task': 'profile', 'target': x, 'connection_type': 'twitter follower' }, follower_data['ids'])
+            result.extend(followers)    
+        except:
+            # We probably got rate limited
+            print(follower_data)    
         
         return result
         
@@ -73,19 +85,13 @@ class TwitterClient(object):
             connection.request(method, url, headers=headers)
         response = connection.getresponse()
         if response.status == 200:
-            return json.load(response)
+            result = json.load(response)
         else:
-            return '{0} {1}'.format(response.status, response.reason)
-        
+            result = '{0} {1}'.format(response.status, response.reason)
+        connection.close()
+        return result
 
-if __name__ == '__main__':
-    config_file = open('config.json', 'r')
-    config = json.load(config_file)
-    config_file.close()
+def get(config):
+    return TwitterClient(config)
     
-    client = TwitterClient(config['twitter'])
-    if client.access_token != None:
-        print(client.get_profile('ramsoy'))
-        #print(client.get_followers('ramsoy'))
-        #print(client.get_lists('ramsoy'))
     

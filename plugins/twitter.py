@@ -21,7 +21,7 @@ class TwitterClient(object):
         if response.status == 200:
             response_data = json.load(response)
             self.access_token = response_data['access_token']
-            print(self.access_token)
+            #print(self.access_token)
         else:
             print('{0} {1}'.format(response.status, response.reason))
         connection.close()

@@ -15,7 +15,7 @@ working_count = 0
 def get_job_key(job):
     return '{0}~{1}~{2}'.format(job['provider'], job['task'], job['target'])
 
-def process(job_queue, clients, data):
+def process(job_queue, data):
     while not job_queue.empty() or working_count > 0:
         try:
             inc_working_count()
@@ -24,10 +24,10 @@ def process(job_queue, clients, data):
             if job_key not in visited:
                 append_visited(job_key)
                 #print_s(job)
-                result, id, name = plugins.fetch[job['provider']].get_profile(job['target'])
+                result, id, name = plugins.fetch(job['provider']).get_profile(job['target'])
                 data_queue.put({ 'provider': job['provider'], 'target': job['target'], 'data': result, 'id': id, 'name': name, 'parent': job['parent'], 'connection_type': job['connection_type'] })
 
-                connections = plugins.fetch[job['provider']].get_connections(job['target'])
+                connections = plugins.fetch(job['provider']).get_connections(job['target'])
                 for connection in connections:
                     connection_key = get_job_key(connection)
                     if connection_key not in visited:
@@ -99,7 +99,7 @@ if __name__ == '__main__':
     
     plugins.load_all(config)
     
-    target, target_id, target_name = twitter.get_profile(target_name)
+    target, target_id, target_name = plugins.fetch('twitter').get_profile(target_name)
     
     job_queue = Queue.Queue()
     job_queue.put({ 'provider': 'twitter', 'task': 'profile', 'target': str(target_id), 'parent': None, 'connection_type': None })

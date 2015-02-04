@@ -2,6 +2,7 @@ import sys
 import httplib
 import urllib
 import json
+import model
 
 class RedditClient(object):
     def __init__(self):
@@ -9,7 +10,7 @@ class RedditClient(object):
         
     def get_profile(self, username):
         result = self.make_request('GET', '/user/{0}/about.json'.format(username), {})
-        return result, result['id'], result['name']
+        return model.Node('reddit', result['name'], result)
         
     def get_connections(self, screen_name):
         # friends?

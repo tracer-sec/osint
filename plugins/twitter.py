@@ -3,6 +3,7 @@ import httplib
 import urllib
 import base64
 import json
+import model
 
 class TwitterClient(object):
     def __init__(self, config):
@@ -25,7 +26,7 @@ class TwitterClient(object):
         else:
             print('{0} {1}'.format(response.status, response.reason))
         connection.close()
-       
+        
     def get_profile(self, target):
         if target in self.profile_cache:
             result = self.profile_cache[target]
@@ -37,15 +38,15 @@ class TwitterClient(object):
             
             # TODO: what if we have to look them up by id?
             self.profile_cache[result['screen_name']] = result
-        return result, result['id'], result['screen_name']
+        return model.Node('twitter', result['screen_name'], result)
         
     def get_connections(self, screen_name):
         result = []
     
-        profile = self.get_profile(screen_name)[0]
+        profile = self.get_profile(screen_name).data
         try:
             url = profile['entities']['url']['urls'][0]['expanded_url']
-            result.append({ 'provider': 'web', 'task': 'profile', 'target': url, 'connection_type': 'twitter profile link' })
+            result.append({ 'provider': 'web', 'target': url, 'connection_type': 'twitter profile link' })
         except Exception as e:
             pass # profile didn't have an attached URL
 

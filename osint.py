@@ -7,13 +7,14 @@ import time
 import data
 import Queue
 import plugins
+import model
 
 visited = []
-node_limit = 5
+node_limit = 8
 working_count = 0
     
 def get_job_key(job):
-    return '{0}~{1}~{2}'.format(job['provider'], job['task'], job['target'])
+    return '{0}~{1}'.format(job['provider'], job['target'])
 
 def process(job_queue, data):
     while not job_queue.empty() or working_count > 0:
@@ -24,19 +25,22 @@ def process(job_queue, data):
             if job_key not in visited:
                 append_visited(job_key)
                 #print_s(job)
-                result, id, name = plugins.fetch(job['provider']).get_profile(job['target'])
-                data_queue.put({ 'provider': job['provider'], 'target': job['target'], 'data': result, 'id': id, 'name': name, 'parent': job['parent'], 'connection_type': job['connection_type'] })
+                node = plugins.fetch(job['provider']).get_profile(job['target'])
+                #print(node)
+                data_queue.put({ 'node': node, 'parent_node': job['parent_node'], 'connection_type': job['connection_type'] })
 
                 connections = plugins.fetch(job['provider']).get_connections(job['target'])
                 for connection in connections:
                     connection_key = get_job_key(connection)
                     if connection_key not in visited:
-                        connection['parent'] = job_key
+                        connection['parent_node'] = node
                         job_queue.put(connection)
         except Queue.Empty:
             pass # swallow it - TODO: doesn't work
         finally:
-            job_queue.task_done() # TODO - what if we didn't get one?
+            if job is not None:
+                job_queue.task_done()
+            job = None
             dec_working_count()
             
         if len(visited) >= node_limit:
@@ -50,15 +54,20 @@ def process(job_queue, data):
         job_queue.task_done()
     
     print_s('Stopping thread')
-        
-        
+    
+    
 def process_data(data_queue, target_name):
     d = data.Storage(target_name)
     while(True):
-        result = data_queue.get()
-        #print_s('d - {0}'.format(result))
-        d.add_profile(result['provider'], 'profile', result['id'], result['name'], result['data'], result['parent'], result['connection_type'])
-        data_queue.task_done()
+        try:
+            result = data_queue.get()
+            #print_s('d - {0}'.format(result))
+            node = d.add_node(result['node'])
+            if result['parent_node'] is not None:
+                connection = model.Connection(result['parent_node'].id, node.id, result['connection_type'], 'concrete', '')
+                d.add_connection(connection)
+        finally:
+            data_queue.task_done()
         
         
 write_lock = threading.Lock()
@@ -95,18 +104,16 @@ if __name__ == '__main__':
     config = json.load(config_file)
     config_file.close()
     
-    target_name = sys.argv[1]
+    target = sys.argv[1]
     
     plugins.load_all(config)
     
-    target, target_id, target_name = plugins.fetch('twitter').get_profile(target_name)
-    
     job_queue = Queue.Queue()
-    job_queue.put({ 'provider': 'twitter', 'task': 'profile', 'target': str(target_id), 'parent': None, 'connection_type': None })
+    job_queue.put({ 'provider': 'twitter', 'target': target, 'parent_node': None, 'connection_type': None })
     data_queue = Queue.Queue()
     
     # 1 data thread
-    t = threading.Thread(name='data', target=process_data, args=[data_queue, target_name])
+    t = threading.Thread(name='data', target=process_data, args=[data_queue, target])
     t.daemon = True
     t.start()
     

@@ -1,7 +1,6 @@
 import whois
 import httplib
 import urlparse
-import utils
 import model
 import re
 
@@ -20,7 +19,12 @@ def get_site_info(node):
     return []
 
 def get_domain(node):
-    domain = utils.get_domain(node.name)
+    if '@' in node.name:
+        # it's an email address
+        domain = node.name[node.name.index('@') + 1:]
+    else:
+        result = urlparse.urlparse(node.name)
+        domain = result.netloc
     n = model.Node('domain', domain, {})
     return [n]
 

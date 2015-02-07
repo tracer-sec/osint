@@ -1,6 +1,11 @@
 import urlparse
 
-def get_domain_from_url(url):
-    result = urlparse.urlparse(url)
-    return result.netloc
+def get_domain(s):
+    if '@' in s:
+        # it's an email address
+        domain = s[s.index('@') + 1:]
+    else:
+        result = urlparse.urlparse(s)
+        domain = result.netloc
+    return domain
     

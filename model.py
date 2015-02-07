@@ -1,11 +1,11 @@
 # node_types: person, twitter, reddit, domain, website, email
 
 class Node(object):
-    def __init__(self, node_type, name, data):
+    def __init__(self, node_type, name, data = {}, id = -1):
         self.node_type = node_type
         self.name = name
         self.data = data
-        self.id = -1        # gets assigned when saved
+        self.id = id        # gets assigned when saved
     
     def __repr__(self):
         return '<{0} {1} {2}>'.format(self.node_type, self.name, self.id)

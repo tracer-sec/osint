@@ -5,6 +5,8 @@ import base64
 import json
 import model
 
+client = None
+
 class TwitterClient(object):
     def __init__(self, config):
         self.access_token = None
@@ -31,45 +33,14 @@ class TwitterClient(object):
         if target in self.profile_cache:
             result = self.profile_cache[target]
         else:
-            if target.isdigit():
-                result = self.make_request('GET', '/1.1/users/show.json', { 'user_id': target, 'stringify_ids': True })
-            else:
-                result = self.make_request('GET', '/1.1/users/show.json', { 'screen_name': target, 'stringify_ids': True })
-            
-            # TODO: what if we have to look them up by id?
+            result = self.make_request('GET', '/1.1/users/show.json', { 'screen_name': target, 'stringify_ids': True })
             self.profile_cache[result['screen_name']] = result
         return model.Node('twitter', result['screen_name'], result)
-        
-    def get_connections(self, screen_name):
-        result = []
-    
-        profile = self.get_profile(screen_name).data
-        try:
-            url = profile['entities']['url']['urls'][0]['expanded_url']
-            result.append({ 'provider': 'web', 'target': url, 'connection_type': 'twitter profile link' })
-        except Exception as e:
-            pass # profile didn't have an attached URL
-
-        follower_data = self.get_followers(screen_name)
-        try:
-            followers = map(lambda x: { 'provider': 'twitter', 'task': 'profile', 'target': x, 'connection_type': 'twitter follower' }, follower_data['ids'])
-            result.extend(followers)    
-        except:
-            # We probably got rate limited
-            print(follower_data)    
-        
-        return result
         
     def get_text(self, screen_name):
         pass
         # bio, tweets
-        
-    def get_followers(self, target):
-        if target.isdigit():
-            return self.make_request('GET', '/1.1/followers/ids.json', { 'user_id': target, 'stringify_ids': True })
-        else:
-            return self.make_request('GET', '/1.1/followers/ids.json', { 'screen_name': target, 'stringify_ids': True })
-        
+                
     def get_lists(self, screen_name):
         return self.make_request('GET', '/1.1/lists/list.json', { 'screen_name': screen_name })
         
@@ -92,7 +63,44 @@ class TwitterClient(object):
         connection.close()
         return result
 
-def get(config):
-    return TwitterClient(config)
+        
+def get_twitter_profile(node):
+    n = client.get_profile(node.name)
+    return [n]
     
+def get_twitter_url(node):
+    try:
+        url = node.data['entities']['url']['urls'][0]['expanded_url']
+    except KeyError:
+        return []
+
+    n = model.Node('website', url, {})
+    # what site data to grab?
+    return [n]
+    
+def get_twitter_followers(node):
+    data = client.make_request('GET', '/1.1/followers/list.json', { 'screen_name': node.name, 'skip_status': True, 'include_user_entities': True })
+    return map(lambda x: model.Node('twitter', x['screen_name'], x), data['users'])
+    
+def get(config):
+    global client
+    client = TwitterClient(config)
+
+    return [
+        {
+            'func': get_twitter_profile,
+            'name': 'Twitter profile',
+            'acts_on': ['person']
+        },
+        {
+            'func': get_twitter_url,
+            'name': 'Twitter profile URL',
+            'acts_on': ['twitter']
+        },
+        {
+            'func': get_twitter_followers,
+            'name': 'Twitter followers',
+            'acts_on': ['twitter']
+        }
+    ]
     

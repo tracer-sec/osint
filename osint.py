@@ -10,40 +10,53 @@ import plugins
 import model
 
 visited = []
-node_limit = 8
 working_count = 0
+request_limit = 8       # each action could result in a tonne of nodes, so 
+                        # bear in mind this won't limit the number of nodes 
+                        # predictably. This more to prevent spamming APIs
     
-def get_job_key(job):
-    return '{0}~{1}'.format(job['provider'], job['target'])
+def get_node_key(node):
+    return '{0}~{1}'.format(node.node_type, node.name)
 
 def process(job_queue, data):
     while not job_queue.empty() or working_count > 0:
         try:
             inc_working_count()
-            job = job_queue.get(True, 5)
-            job_key = get_job_key(job)
-            if job_key not in visited:
-                append_visited(job_key)
-                #print_s(job)
-                node = plugins.fetch(job['provider']).get_profile(job['target'])
-                #print(node)
-                data_queue.put({ 'node': node, 'parent_node': job['parent_node'], 'connection_type': job['connection_type'] })
+            node = job_queue.get(True, 5)
+            node_key = get_node_key(node)
+            if node_key not in visited:
+                append_visited(node_key)
+                #print_s(node)
+                actions = plugins.fetch_actions(node.node_type)
+                #print_s(actions)
+                for action in actions:
+                    new_nodes = action['func'](node)
+                    #print_s(new_nodes)
+                    for child in new_nodes:
+                        # TODO:
+                        # check to see if they're in the DB already
+                        # add a connection if so
+                        # else add a node and connection, and put them on the job queue
+                        # TODO
+                        data_queue.put({ 'node': child, 'parent_node': node, 'connection_type': action['name'] })
+                        child_key = get_node_key(child)
+                        if child_key not in visited:
+                            job_queue.put(child)
 
-                connections = plugins.fetch(job['provider']).get_connections(job['target'])
-                for connection in connections:
-                    connection_key = get_job_key(connection)
-                    if connection_key not in visited:
-                        connection['parent_node'] = node
-                        job_queue.put(connection)
         except Queue.Empty:
             pass # swallow it - TODO: doesn't work
+        except Exception as e:
+            print_s(e)
+            break
         finally:
-            if job is not None:
+            if node is not None:
+                # re-save the original node in case any of our actions updated it
+                data_queue.put({ 'node': node, 'parent_node': None, 'connection_type': None })
                 job_queue.task_done()
-            job = None
+            node = None
             dec_working_count()
             
-        if len(visited) >= node_limit:
+        if len(visited) >= request_limit:
             break
         
         time.sleep(2)
@@ -66,6 +79,9 @@ def process_data(data_queue, target_name):
             if result['parent_node'] is not None:
                 connection = model.Connection(result['parent_node'].id, node.id, result['connection_type'], 'concrete', '')
                 d.add_connection(connection)
+        except Exception as e:
+            print_s(e)
+            break
         finally:
             data_queue.task_done()
         
@@ -104,26 +120,29 @@ if __name__ == '__main__':
     config = json.load(config_file)
     config_file.close()
     
-    target = sys.argv[1]
-    
     plugins.load_all(config)
     
+    node_type = sys.argv[1]
+    target = sys.argv[2]
+    start_node = model.Node(node_type, target)
+    
     job_queue = Queue.Queue()
-    job_queue.put({ 'provider': 'twitter', 'target': target, 'parent_node': None, 'connection_type': None })
+    job_queue.put(start_node)
     data_queue = Queue.Queue()
+    data_queue.put({ 'node': start_node, 'parent_node': None, 'connection_type': None })
     
     # 1 data thread
     t = threading.Thread(name='data', target=process_data, args=[data_queue, target])
     t.daemon = True
     t.start()
     
-    # Guess associated profiles?
-    
     # 4 worker threads
     for i in range(4):
         t = threading.Thread(name=str(i), target=process, args=[job_queue, data_queue])
         t.daemon = True
         t.start()
+        # Just so our start times are staggered
+        time.sleep(0.5)
         
     job_queue.join()
     data_queue.join()

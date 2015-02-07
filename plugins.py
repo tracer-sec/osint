@@ -2,7 +2,7 @@ import imp
 import os
 import sys
 
-plugin_list = dict()
+action_list = []
 
 def load_all(config):
     print('Loading plugins . . .')
@@ -11,11 +11,11 @@ def load_all(config):
         plugin = load(py_file)
         # TODO: dictionary lookup that returns None on failure?
         if plugin.__name__ in config:
-            client = plugin.get(config[plugin.__name__])
+            actions = plugin.get(config[plugin.__name__])
         else:
-            client = plugin.get(None)
-        print('* ' + plugin.__name__)
-        plugin_list[plugin.__name__] = client
+            actions = plugin.get(None)
+        print('* {0} - ({1})'.format(plugin.__name__, len(actions)))
+        action_list.extend(actions)
     print('Done')
 
 def load(filename):
@@ -23,6 +23,6 @@ def load(filename):
     module_name = filename[:-3]
     return imp.load_source(module_name, full_path)
 
-def fetch(name):
-    return plugin_list[name]
-    
+def fetch_actions(node_type):
+    return filter(lambda x: node_type in x['acts_on'], action_list)
+

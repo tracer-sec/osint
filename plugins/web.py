@@ -3,31 +3,58 @@ import httplib
 import urlparse
 import utils
 import model
+import re
 
-class WebClient(object):
-    def __init__(self):
-        pass
+def get_site_info(node):
+    '''
+    u = urlparse.urlparse(node.name)
+    if u.scheme == 'http':
+        connection = httplib.HTTPConnection(u.netloc)
+    elif u.scheme == 'https':
+        connection = httplib.HTTPSConnection(u.netloc)
         
-    def get_profile(self, target):
-        domain = utils.get_domain_from_url(target)
-        whois_info = whois.lookup(domain, True)
-        data = { 'whois': whois_info }
-        '''
-        # server, meta description . . .
-        u = urlparse.urlparse(target)
-        if u.scheme == 'http':
-            connection = httplib.HTTPConnection(u.netloc)
-        elif u.scheme == 'https':
-            connection = httplib.HTTPSConnection(u.netloc)
+    # Server header, meta-tags, etc.
+        
+    connection.close()
+    '''
+    return []
 
-        connection.close()
-        '''
-        return model.Node('website', target, data)
-        
-    def get_connections(self, target):
-        # Emails for administrative contacts?
-        return []
-        
+def get_domain(node):
+    domain = utils.get_domain(node.name)
+    n = model.Node('domain', domain, {})
+    return [n]
+
+def get_whois(node):
+    whois_info = whois.lookup(node.name, True)
+    node.data['whois'] = whois_info
+    return []
+    
+def extract_administrative_emails(node):
+    email_nodes = []
+    if 'whois' in node.data:
+        whois_info = node.data['whois']
+        email_addresses = re.findall('[a-zA-Z0-9.+_-]+@[a-zA-Z0-9.-]+', whois_info)
+        for email_address in email_addresses:
+            email_nodes.append(model.Node('email', email_address, {}))
+    return email_nodes
+    
+    
 def get(config):
-    return WebClient()
+    return [
+        {
+            'func': get_domain,
+            'name': 'Domain',
+            'acts_on': ['website', 'email']
+        },
+        {
+            'func': get_whois,
+            'name': 'Whois',
+            'acts_on': ['domain']
+        },
+        {
+            'func': extract_administrative_emails,
+            'name': 'Administrative contact',
+            'acts_on': ['domain']
+        }
+    ]
     

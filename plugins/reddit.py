@@ -28,6 +28,6 @@ class RedditClient(object):
 
 
 def get(config):
-    return RedditClient()
+    return []
     
     

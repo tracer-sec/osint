@@ -80,7 +80,10 @@ def get_twitter_url(node):
     
 def get_twitter_followers(node):
     data = client.make_request('GET', '/1.1/followers/list.json', { 'screen_name': node.name, 'skip_status': True, 'include_user_entities': True })
-    return map(lambda x: model.Node('twitter', x['screen_name'], x), data['users'])
+    if type(data) is str:
+        return []
+    else:
+        return map(lambda x: model.Node('twitter', x['screen_name'], x), data['users'])
     
 def get(config):
     global client

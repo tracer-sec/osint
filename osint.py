@@ -8,10 +8,11 @@ import data
 import Queue
 import plugins
 import model
+#import traceback
 
 visited = []
 working_count = 0
-request_limit = 8       # each action could result in a tonne of nodes, so 
+request_limit = 40      # each action could result in a tonne of nodes, so 
                         # bear in mind this won't limit the number of nodes 
                         # predictably. This more to prevent spamming APIs
     
@@ -19,6 +20,7 @@ def get_node_key(node):
     return '{0}~{1}'.format(node.node_type, node.name)
 
 def process(job_queue, data):
+    node = None
     while not job_queue.empty() or working_count > 0:
         try:
             inc_working_count()
@@ -47,6 +49,7 @@ def process(job_queue, data):
             pass # swallow it - TODO: doesn't work
         except Exception as e:
             print_s(e)
+            #traceback.print_exc()
             break
         finally:
             if node is not None:

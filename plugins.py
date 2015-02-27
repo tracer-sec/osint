@@ -26,3 +26,8 @@ def load(filename):
 def fetch_actions(node_type):
     return filter(lambda x: node_type in x['acts_on'], action_list)
 
+def fetch(action_name):
+    # find?
+    result = filter(lambda x: x['func'].__name__ == action_name, action_list)
+    return None if len(result) == 0 else result[0]
+    

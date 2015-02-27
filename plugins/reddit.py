@@ -57,7 +57,8 @@ def get_stats(node):
         result['max_score'] = max(result['max_score'], score)
         result['average_score'] = result['average_score'] + score
     
-    result['average_score'] = float(result['average_score']) / len(data)
+    if len(data) > 0:
+        result['average_score'] = float(result['average_score']) / len(data)
     node.data['stats'] = result
     return []
     

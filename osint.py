@@ -10,11 +10,14 @@ import plugins
 import model
 #import traceback
 
-visited = []
-working_count = 0
-request_limit = 40      # each action could result in a tonne of nodes, so 
+REQUEST_LIMIT = 80      # each action could result in a tonne of nodes, so 
                         # bear in mind this won't limit the number of nodes 
                         # predictably. This more to prevent spamming APIs
+QUEUE_TIMEOUT = 5       # how long the queue will wait (in seconds) before it 
+                        # gives the fuck up
+
+visited = []
+working_count = 0
     
 def get_node_key(node):
     return '{0}~{1}'.format(node.node_type, node.name)
@@ -24,7 +27,7 @@ def process(job_queue, data):
     while not job_queue.empty() or working_count > 0:
         try:
             inc_working_count()
-            node = job_queue.get(True, 5)
+            node = job_queue.get(True, QUEUE_TIMEOUT)
             node_key = get_node_key(node)
             if node_key not in visited:
                 append_visited(node_key)
@@ -35,11 +38,6 @@ def process(job_queue, data):
                     new_nodes = action['func'](node)
                     #print_s(new_nodes)
                     for child in new_nodes:
-                        # TODO:
-                        # check to see if they're in the DB already
-                        # add a connection if so
-                        # else add a node and connection, and put them on the job queue
-                        # TODO
                         data_queue.put({ 'node': child, 'parent_node': node, 'connection_type': action['name'] })
                         child_key = get_node_key(child)
                         if child_key not in visited:
@@ -59,7 +57,7 @@ def process(job_queue, data):
             node = None
             dec_working_count()
             
-        if len(visited) >= request_limit:
+        if len(visited) >= REQUEST_LIMIT:
             break
         
         time.sleep(2)

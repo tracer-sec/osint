@@ -1,4 +1,5 @@
 # node_types: person, twitter, reddit, domain, website, email
+import json
 
 class Node(object):
     def __init__(self, node_type, name, data = {}, id = -1):
@@ -9,6 +10,10 @@ class Node(object):
     
     def __repr__(self):
         return '<{0} {1} {2}>'.format(self.node_type, self.name, self.id)
+        
+    @property
+    def data_json(self):
+        return json.dumps(self.data)
 
         
 # creation_type: concrete, manual, speculative

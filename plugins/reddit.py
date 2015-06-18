@@ -24,11 +24,11 @@ class RedditClient(object):
             return '{0} {1}'.format(response.status, response.reason)
 
             
-def get_profile(node):
+def get_reddit_profile(node):
     n = client.get_profile(node.name)
     return [n]
     
-def get_stats(node):
+def get_reddit_stats(node):
     response = client.make_request('GET', '/user/{0}/overview.json?sort=top&limit=100'.format(node.name), {})
     data = response['data']['children']
     
@@ -69,12 +69,12 @@ def get(config):
     
     return [
         {
-            'func': get_profile,
+            'func': get_reddit_profile,
             'name': 'Reddit profile',
             'acts_on': ['person']
         },
         {
-            'func': get_stats,
+            'func': get_reddit_stats,
             'name': 'Reddit stats',
             'acts_on': ['reddit']
         }       

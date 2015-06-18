@@ -1,7 +1,6 @@
 # osint.py
 
 import sys
-import json
 import threading
 import time
 import data
@@ -85,8 +84,10 @@ def process_data(data_queue, target_name):
             break
         finally:
             data_queue.task_done()
-        
-        
+    
+    print_s('Stopping thread')
+
+    
 write_lock = threading.Lock()
 working_count_lock = threading.Lock()
 visited_lock = threading.Lock()
@@ -117,11 +118,7 @@ def append_visited(key):
     
     
 if __name__ == '__main__':
-    config_file = open('config.json', 'r')
-    config = json.load(config_file)
-    config_file.close()
-    
-    plugins.load_all(config)
+    plugins.load_all('config.json')
     
     node_type = sys.argv[1]
     target = sys.argv[2]

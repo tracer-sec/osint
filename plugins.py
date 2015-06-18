@@ -1,12 +1,21 @@
 import imp
 import os
 import sys
+import json
 
 action_list = []
 
-def load_all(config):
+current_path = os.path.dirname(os.path.abspath(__file__))
+
+def load_all(config_name):
+    config_name = os.path.join(current_path, config_name)
+
+    config_file = open(config_name, 'r')
+    config = json.load(config_file)
+    config_file.close()
+    
     print('Loading plugins . . .')
-    py_files = filter(lambda x: os.path.isfile(os.path.join('plugins', x)) and x.lower().endswith('.py'), os.listdir('plugins'))
+    py_files = filter(lambda x: os.path.isfile(os.path.join(current_path, 'plugins', x)) and x.lower().endswith('.py'), os.listdir(os.path.join(current_path, 'plugins')))
     for py_file in py_files:
         plugin = load(py_file)
         # TODO: dictionary lookup that returns None on failure?
@@ -19,7 +28,7 @@ def load_all(config):
     print('Done')
 
 def load(filename):
-    full_path = os.path.join('plugins', filename)
+    full_path = os.path.join(current_path, 'plugins', filename)
     module_name = filename[:-3]
     return imp.load_source(module_name, full_path)
 

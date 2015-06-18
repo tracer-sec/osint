@@ -1,14 +1,9 @@
 import plugins
-import json
 import sys
 import data
 import model
-
-config_file = open('config.json', 'r')
-config = json.load(config_file)
-config_file.close()
     
-plugins.load_all(config)
+plugins.load_all('config.json')
 
 target = sys.argv[1]
 

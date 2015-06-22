@@ -45,7 +45,7 @@ class Storage(object):
     def get_nodes(self):
         c = self.connection.cursor()
         c.execute('SELECT id, node_type, name, data FROM nodes')
-        result = [model.Node(x[1], x[2], x[3], x[0]) for x in c.fetchall()]
+        result = [model.Node(x[1], x[2], json.loads(x[3]), x[0]) for x in c.fetchall()]
         return result
 
     def get_node(self, id = None, node_type = None, name = None):
@@ -58,7 +58,7 @@ class Storage(object):
         if x is None:
             result = None
         else:
-            result = model.Node(x[1], x[2], x[3], x[0])
+            result = model.Node(x[1], x[2], json.loads(x[3]), x[0])
         return result
         
         

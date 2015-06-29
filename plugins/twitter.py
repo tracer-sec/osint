@@ -66,10 +66,14 @@ class TwitterClient(object):
         
 def get_twitter_profile(node):
     n = client.get_profile(node.name)
-    return [n]
+    if n is None:
+        return []
+    else:
+        return [n]
     
 def get_twitter_url(node):
     try:
+        print(json.dumps(node.data))
         url = node.data['entities']['url']['urls'][0]['expanded_url']
     except KeyError:
         return []

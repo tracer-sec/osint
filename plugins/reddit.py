@@ -26,7 +26,10 @@ class RedditClient(object):
             
 def get_reddit_profile(node):
     n = client.get_profile(node.name)
-    return [n]
+    if n is None:
+        return []
+    else:
+        return [n]
     
 def get_reddit_stats(node):
     response = client.make_request('GET', '/user/{0}/overview.json?sort=top&limit=100'.format(node.name), {})

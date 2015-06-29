@@ -5,8 +5,11 @@ class Node(object):
     def __init__(self, node_type, name, data = {}, id = -1):
         self.node_type = node_type
         self.name = name
-        self.data = data
         self.id = id        # gets assigned when saved
+        if isinstance(data, str):
+            self.data = json.loads(data)
+        else:
+            self.data = data
     
     def __repr__(self):
         return '<{0} {1} {2}>'.format(self.node_type, self.name, self.id)

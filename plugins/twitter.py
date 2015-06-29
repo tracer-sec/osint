@@ -73,7 +73,6 @@ def get_twitter_profile(node):
     
 def get_twitter_url(node):
     try:
-        print(json.dumps(node.data))
         url = node.data['entities']['url']['urls'][0]['expanded_url']
     except KeyError:
         return []

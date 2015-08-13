@@ -16,7 +16,7 @@ class Node(object):
         
     @property
     def data_json(self):
-        return json.dumps(self.data)
+        return json.dumps(self.data, sort_keys=True, indent=3)
 
         
 # creation_type: concrete, manual, speculative

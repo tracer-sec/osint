@@ -178,15 +178,22 @@ SERVERS = {
     'za.com': 'whois.centralnic.com'
 }
 
+def get_second_domain(target, tld):
+    start_index = target.rfind('.', 0, len(target) - len(tld) - 1)
+    return target[start_index + 1:]
+
 def lookup(target, recurse=False, server=None):
     target = target.lower()
     tld = filter(lambda x: target.endswith(x), SERVERS.keys())[0]
+    top_domain = get_second_domain(target, tld)
+    
     if server is None:
         server = SERVERS[tld]
     
+    print('looking up ' + top_domain)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((server, 43))
-    s.send(target + '\r\n')
+    s.send(top_domain + '\r\n')
     data = ''
     d = s.recv(4096)
     while d:

@@ -6,7 +6,6 @@ import re
 
 BORING_HEADERS = [
     'etag',
-    'set-cookie',
     'content-length',
     'content-type',
     'date',

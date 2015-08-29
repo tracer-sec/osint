@@ -1,2 +1,0 @@
-PyYAML==3.11
-textblob==0.8.4

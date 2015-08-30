@@ -38,7 +38,7 @@ while True:
             id = int(tokens[1])
             result = d.get_node(id)
             print(result)
-            print(result.data)
+            print(result.data_json)
         else:
             print('USAGE: get NODE_ID')
         

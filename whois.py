@@ -158,7 +158,7 @@ SERVERS = {
     'tv': 'whois.nic.tv',
     'tz': 'whois.tznic.or.tz',
     'ua': 'whois.ua',
-    'uk': 'whois.nic.uk',
+    'co.uk': 'whois.nic.uk',
     'uk.com': 'whois.centralnic.com',
     'uk.net': 'whois.centralnic.com',
     'ac.uk': 'whois.ja.net',

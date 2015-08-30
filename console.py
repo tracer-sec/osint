@@ -12,13 +12,8 @@ start_node = model.Node('person', target)
 d = data.Storage(target)
 d.add_node(start_node)
 
-while True:
-    command = raw_input('> ')
-    tokens = command.split(' ')
-    if tokens[0].lower() == 'quit':
-        break
-        
-    elif tokens[0].lower() == 'list':
+def handle(tokens):        
+    if tokens[0].lower() == 'list':
         # show list of nodes
         if len(tokens) > 1:
             if tokens[1].lower() == 'nodes':
@@ -61,4 +56,15 @@ while True:
         
     else:
         print('< Unknown command: ' + command)
+
+while True:
+    command = raw_input('> ')
+    tokens = command.split(' ')
+    if tokens[0].lower() == 'quit':
+        break
+    else:
+        try:
+            handle(tokens)
+        except Exception, e:
+            print(e)
     

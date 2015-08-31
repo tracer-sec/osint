@@ -40,8 +40,11 @@ def get_domain(node):
     return [n]
 
 def get_whois(node):
-    whois_info = whois.lookup(node.name, True)
-    node.data['whois'] = whois_info
+    try:
+        whois_info = whois.lookup(node.name, True)
+        node.data['whois'] = whois_info
+    except Exception, e:
+        print(e)
     return []
     
 def extract_administrative_emails(node):

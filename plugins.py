@@ -33,7 +33,8 @@ def load(filename):
     return imp.load_source(module_name, full_path)
 
 def fetch_actions(node_type):
-    return filter(lambda x: node_type in x['acts_on'], action_list)
+    return filter(lambda x: node_type in x['acts_on'] or '*' in x['acts_on']
+, action_list)
 
 def fetch(action_name):
     # find?

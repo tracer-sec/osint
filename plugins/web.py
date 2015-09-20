@@ -15,20 +15,6 @@ BORING_HEADERS = [
     'cache-control'
 ]
 
-def get_site_info(node):
-    '''
-    u = urlparse.urlparse(node.name)
-    if u.scheme == 'http':
-        connection = httplib.HTTPConnection(u.netloc)
-    elif u.scheme == 'https':
-        connection = httplib.HTTPSConnection(u.netloc)
-
-    # Server header, meta-tags, etc.
-
-    connection.close()
-    '''
-    return []
-
 def get_domain(node):
     if '@' in node.name:
         # it's an email address
@@ -43,7 +29,7 @@ def get_whois(node):
     try:
         whois_info = whois.lookup(node.name, True)
         node.data['whois'] = whois_info
-    except Exception, e:
+    except Exception as e:
         print(e)
     return []
     

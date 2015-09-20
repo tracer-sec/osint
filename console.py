@@ -65,6 +65,6 @@ while True:
     else:
         try:
             handle(tokens)
-        except Exception, e:
+        except Exception as e:
             print(e)
     

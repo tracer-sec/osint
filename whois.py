@@ -190,10 +190,14 @@ def lookup(target, recurse=False, server=None):
     if server is None:
         server = SERVERS[tld]
     
-    print('looking up ' + top_domain)
+    query = top_domain
+    if server == 'whois.verisign-grs.com': # Grrrr.
+        query = '=' + query
+    
+    print('looking up ' + query + ' at ' + server)
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((server, 43))
-    s.send(top_domain + '\r\n')
+    s.send(query + '\r\n')
     data = ''
     d = s.recv(4096)
     while d:
@@ -202,7 +206,12 @@ def lookup(target, recurse=False, server=None):
     s.close()
     
     if recurse:
-        next_server = re.search('^\s*whois server:\s*([a-z0-9.-]+)$', data, re.MULTILINE | re.IGNORECASE)
+        # Since whois.verisign-grs.com now returns multiple hits, ignore any 'matches' that 
+        # don't - you know - match, and only start looking for the next whois server from
+        # that point on
+        theatrical_sigh = re.search('^\s*domain name:\s*([a-z0-9.-]+)$', data, re.MULTILINE | re.IGNORECASE)
+        start_index = 0 if theatrical_sigh is None else theatrical_sigh.end(1)
+        next_server = re.search('^\s*whois server:\s*([a-z0-9.-]+)$', data[start_index:], re.MULTILINE | re.IGNORECASE)
         if next_server is not None:
             data = lookup(target, False, next_server.group(1))
     

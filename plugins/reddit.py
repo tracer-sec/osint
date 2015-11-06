@@ -1,6 +1,4 @@
-import sys
 import httplib
-import urllib
 import json
 import model
 
@@ -12,7 +10,7 @@ class RedditClient(object):
         
     def get_profile(self, username):
         result = self.make_request('GET', '/user/{0}/about.json'.format(username), {})
-        if 'data' in result and 'data' in result['data']:
+        if 'data' in result and 'name' in result['data']:
             return model.Node('reddit', result['data']['name'], result)
         else:
             return None
@@ -48,10 +46,11 @@ def get_reddit_stats(node):
     
     for entry in data:
         subreddit = entry['data']['subreddit']
-        if 'domain' in entry['data'] and not entry['data']['is_self']:
-            domain = entry['data']['domain']
-        else:
-            domain = None
+        if entry['kind'] == 't3':
+            if 'domain' in entry['data'] and not entry['data']['is_self']:
+                domain = entry['data']['domain']
+            else:
+                domain = None
         score = entry['data']['score']
         if subreddit in result['subreddit_activity']:
             result['subreddit_activity'][subreddit] = result['subreddit_activity'][subreddit] + 1

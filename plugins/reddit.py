@@ -31,9 +31,9 @@ def get_reddit_profile(node):
         return []
     else:
         return [n]
-    
+
 def get_reddit_stats(node):
-    response = client.make_request('GET', '/user/{0}/overview.json?sort=top&limit=100'.format(node.name), {})
+    response = client.make_request('GET', '/user/{0}/overview.json?sort=top&limit=20'.format(node.name), {})
     data = response['data']['children']
     
     result = {
@@ -46,11 +46,10 @@ def get_reddit_stats(node):
     
     for entry in data:
         subreddit = entry['data']['subreddit']
+        domain = None
         if entry['kind'] == 't3':
             if 'domain' in entry['data'] and not entry['data']['is_self']:
                 domain = entry['data']['domain']
-            else:
-                domain = None
         score = entry['data']['score']
         if subreddit in result['subreddit_activity']:
             result['subreddit_activity'][subreddit] = result['subreddit_activity'][subreddit] + 1

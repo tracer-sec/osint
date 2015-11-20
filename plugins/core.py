@@ -33,6 +33,8 @@ def get_emails(node):
     result = find_matches(node.data, regex)
     return map(lambda x: model.Node('email', x), set(result))
 
+def convert_to_person(node):
+    return [model.Node('person', node.name)]
 
 for r in SOCIAL_MEDIA_URLS.keys():
     SOCIAL_MEDIA_URLS[r] = re.compile(SOCIAL_MEDIA_URLS[r])
@@ -71,6 +73,11 @@ def get(config):
         {
             'func': get_emails,
             'name': 'Look for email addresses',
+            'acts_on': ['*']
+        },
+        {
+            'func': convert_to_person,
+            'name': 'Convert any convert any node to a person',
             'acts_on': ['*']
         }
     ]

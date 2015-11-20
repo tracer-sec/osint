@@ -10,6 +10,8 @@ class RedditClient(object):
         
     def get_profile(self, username):
         result = self.make_request('GET', '/user/{0}/about.json'.format(username), {})
+        if 'kind' in result:
+            del result['kind']
         if 'data' in result and 'name' in result['data']:
             return model.Node('reddit', result['data']['name'], result)
         else:

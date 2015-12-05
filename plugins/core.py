@@ -1,11 +1,6 @@
 import re
 import model
 
-SOCIAL_MEDIA_URLS = {
-    'twitter': 'https?://twitter.com/([A-Za-z0-9_-]+)',
-    'github': 'https?://github.com/([A-Za-z0-9_-]+)'
-}
-
 EMAIL_PATTERN = '[A-Za-z0-9._-]+@[A-Za-z0-9._-]+\.[A-Za-z]+'
 
 def find_matches(d, regex):
@@ -19,15 +14,6 @@ def find_matches(d, regex):
     return result
 
 
-def get_social_links(node):
-    result = []
-    for r in SOCIAL_MEDIA_URLS.keys():
-        urls = find_matches(node.data, SOCIAL_MEDIA_URLS[r])
-        result.extend(map(lambda x: model.Node(r, x), urls))
-    print(result)
-    return result
-
-            
 def get_emails(node):
     regex = re.compile(EMAIL_PATTERN)
     result = find_matches(node.data, regex)
@@ -35,9 +21,6 @@ def get_emails(node):
 
 def convert_to_person(node):
     return [model.Node('person', node.name)]
-
-for r in SOCIAL_MEDIA_URLS.keys():
-    SOCIAL_MEDIA_URLS[r] = re.compile(SOCIAL_MEDIA_URLS[r])
 
 
 if __name__ == '__main__':
@@ -59,17 +42,10 @@ if __name__ == '__main__':
     }
     result = get_emails(n)
     print(result)
-    result = get_social_links(n)
-    print(result)
 
 
 def get(config):
     return [
-        {
-            'func': get_social_links,
-            'name': 'Hoover up social links',
-            'acts_on': ['*']
-        },
         {
             'func': get_emails,
             'name': 'Look for email addresses',

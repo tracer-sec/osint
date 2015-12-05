@@ -3,6 +3,7 @@ import httplib
 import urlparse
 import model
 import re
+import webclient
 
 BORING_HEADERS = [
     'etag',
@@ -14,6 +15,11 @@ BORING_HEADERS = [
     'vary',
     'cache-control'
 ]
+
+SOCIAL_MEDIA_URLS = {
+    'twitter': 'https?://twitter.com/([A-Za-z0-9_-]+)',
+    'github': 'https?://github.com/([A-Za-z0-9_-]+)'
+}
 
 def get_domain(node):
     if '@' in node.name:
@@ -32,15 +38,6 @@ def get_whois(node):
     except Exception as e:
         print(e)
     return []
-    
-def extract_administrative_emails(node):
-    email_nodes = []
-    if 'whois' in node.data:
-        whois_info = node.data['whois']
-        email_addresses = re.findall('[a-zA-Z0-9.+_-]+@[a-zA-Z0-9.-]+', whois_info)
-        for email_address in email_addresses:
-            email_nodes.append(model.Node('email', email_address, {}))
-    return email_nodes
     
 
 def get_http_server_headers(node):
@@ -61,7 +58,22 @@ def get_http_server_headers(node):
     node.data['headers'] = filter(lambda x: x[0] not in BORING_HEADERS, headers)
     return []
 
-    
+
+def get_social_links(node):
+    client = webclient.WebClient(node.name)
+    links = client.get_links()
+    result = []
+    for link in links:
+        for r in SOCIAL_MEDIA_URLS.keys():
+            m = SOCIAL_MEDIA_URLS[r].match(link)
+            if m is not None:
+                result.append(model.Node(r, m.group(1)))
+    return result
+
+for r in SOCIAL_MEDIA_URLS.keys():
+    SOCIAL_MEDIA_URLS[r] = re.compile(SOCIAL_MEDIA_URLS[r])
+
+
 def get(config):
     return [
         {
@@ -75,13 +87,13 @@ def get(config):
             'acts_on': ['domain']
         },
         {
-            'func': extract_administrative_emails,
-            'name': 'Administrative contact',
-            'acts_on': ['domain']
-        },
-        {
             'func': get_http_server_headers,
             'name': 'Get HTTP server headers',
+            'acts_on': ['website']
+        },
+        {
+            'func': get_social_links,
+            'name': 'Get social links from homepage',
             'acts_on': ['website']
         }
     ]

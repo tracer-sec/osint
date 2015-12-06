@@ -4,6 +4,7 @@ import sys
 import json
 
 action_list = []
+client_list = {}
 
 current_path = os.path.dirname(os.path.abspath(__file__))
 
@@ -13,7 +14,20 @@ def load_all(config_name):
     config_file = open(config_name, 'r')
     config = json.load(config_file)
     config_file.close()
-    
+
+    print('Loading clients . . .')
+    py_files = filter(lambda x: os.path.isfile(os.path.join(current_path, 'clients', x)) and x.lower().endswith('.py'), os.listdir(os.path.join(current_path, 'clients')))
+    for py_file in py_files:
+        plugin = load(py_file)
+        # TODO: dictionary lookup that returns None on failure?
+        if plugin.__name__ in config:
+            client = plugin.get(config[plugin.__name__])
+        else:
+            client = plugin.get(None)
+        print('* {0}'.format(plugin.__name__))
+        client_list[plugin.__name__] = client
+    print('Done')
+
     print('Loading plugins . . .')
     py_files = filter(lambda x: os.path.isfile(os.path.join(current_path, 'plugins', x)) and x.lower().endswith('.py'), os.listdir(os.path.join(current_path, 'plugins')))
     for py_file in py_files:
@@ -41,4 +55,20 @@ def fetch(action_name):
     # find?
     result = filter(lambda x: x['func'].__name__ == action_name, action_list)
     return None if len(result) == 0 else result[0]
+
+def run(node, action_name):
+    result = []
+    try:
+        action = fetch(action_name)
+        if action is not None:
+            result = action['func'](node)
+            for newNode in result:
+                if newNode.data is None:
+                    if newNode.type in clients:
+                        clients[newNode.type].getNode(node)
+                    else:
+                        newNode.data = {}
+    except Exception as e:
+        print(e)
+    return result
     

@@ -18,7 +18,7 @@ def load_all(config_name):
     print('Loading clients . . .')
     py_files = filter(lambda x: os.path.isfile(os.path.join(current_path, 'clients', x)) and x.lower().endswith('.py'), os.listdir(os.path.join(current_path, 'clients')))
     for py_file in py_files:
-        plugin = load(py_file)
+        plugin = load(py_file, 'clients')
         # TODO: dictionary lookup that returns None on failure?
         if plugin.__name__ in config:
             client = plugin.get(config[plugin.__name__])
@@ -31,7 +31,7 @@ def load_all(config_name):
     print('Loading plugins . . .')
     py_files = filter(lambda x: os.path.isfile(os.path.join(current_path, 'plugins', x)) and x.lower().endswith('.py'), os.listdir(os.path.join(current_path, 'plugins')))
     for py_file in py_files:
-        plugin = load(py_file)
+        plugin = load(py_file, 'plugins')
         # TODO: dictionary lookup that returns None on failure?
         if plugin.__name__ in config:
             actions = plugin.get(config[plugin.__name__])
@@ -41,8 +41,8 @@ def load_all(config_name):
         action_list.extend(actions)
     print('Done')
 
-def load(filename):
-    full_path = os.path.join(current_path, 'plugins', filename)
+def load(filename, subdir):
+    full_path = os.path.join(current_path, subdir, filename)
     module_name = filename[:-3]
     return imp.load_source(module_name, full_path)
 
@@ -56,6 +56,8 @@ def fetch(action_name):
     result = filter(lambda x: x['func'].__name__ == action_name, action_list)
     return None if len(result) == 0 else result[0]
 
+import traceback
+
 def run(node, action_name):
     result = []
     try:
@@ -64,11 +66,12 @@ def run(node, action_name):
             result = action['func'](node)
             for newNode in result:
                 if newNode.data is None:
-                    if newNode.type in clients:
-                        clients[newNode.type].getNode(node)
+                    if newNode.node_type in client_list:
+                        client_list[newNode.node_type].get_data(newNode)
                     else:
                         newNode.data = {}
     except Exception as e:
         print(e)
+        print(traceback.format_exc())
     return result
     

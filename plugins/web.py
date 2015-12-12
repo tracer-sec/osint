@@ -67,7 +67,7 @@ def get_social_links(node):
         for r in SOCIAL_MEDIA_URLS.keys():
             m = SOCIAL_MEDIA_URLS[r].match(link)
             if m is not None:
-                result.append(model.Node(r, m.group(1)))
+                result.append(model.Node(r, m.group(1), None))
     return result
 
 for r in SOCIAL_MEDIA_URLS.keys():

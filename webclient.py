@@ -16,29 +16,36 @@ SOCIAL_MEDIA_URLS = {
 
 class WebClient(object):
     def __init__(self, url):
-        u = urlparse.urlparse(url)
-        if u.scheme == 'http':
-            connection = httplib.HTTPConnection(u.netloc)
-        elif u.scheme == 'https':
-            connection = httplib.HTTPSConnection(u.netloc)
+        for i in range(5):
+            u = urlparse.urlparse(url)
+            if u.scheme == 'http':
+                connection = httplib.HTTPConnection(u.netloc)
+            elif u.scheme == 'https':
+                connection = httplib.HTTPSConnection(u.netloc)
 
-        path = u.path
-        connection.request('GET', path) #, headers = {'User-Agent': 'tracer-sec/osint'})
-        response = connection.getresponse()
+            path = u.path
+            connection.request('GET', path) #, headers = {'User-Agent': 'tracer-sec/osint'})
+            response = connection.getresponse()
+            headers = dict(response.getheaders())
+            if 'location' in headers:
+                url = headers['location'] 
+            else:
+                break
+            
+            connection.close()
+            response = None
 
-        # TODO: handle 3xx
-
-        if response.status == 200:
+        if response is not None and response.status == 200:
             self._html = html.fromstring(response.read())
+            connection.close()
         else:
-            self._html = ''
-
-        connection.close()
+            self._html = None
 
     def get_matches(self, paths):
         matches = []
-        for path in paths:
-            matches.extend(self._html.xpath(path))
+        if self._html is not None:
+            for path in paths:
+                matches.extend(self._html.xpath(path))
         return matches
 
     def get_links(self, filter = None):

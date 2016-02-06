@@ -1,6 +1,6 @@
-import sys
 import socket
 import re
+import model
 
 # Thanks NirSoft - http://www.nirsoft.net/whois_servers_list.html
 
@@ -217,8 +217,23 @@ def lookup(target, recurse=False, server=None):
     
     return data
 
-if __name__ == '__main__':
-    target = sys.argv[1]
-    whois_server = sys.argv[2] if len(sys.argv) == 3 else None
-    print(lookup(target, True, whois_server))
+class DomainClient(object):
+    def __init__(self, config):
+        self.cache = {}
+
+    def get_node(self, target):
+        node = model.Node('domain', target)
+        self.get_data(node)
+        return node
     
+    def get_data(self, node):
+        if node.name in self.cache:
+            result = self.cache[node.name]
+        else:
+            result = { 'whois': lookup(node.name, True) }
+            self.cache[node.name] = result
+        node.data = result
+
+def get(config):
+    return DomainClient(config)
+

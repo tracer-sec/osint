@@ -88,7 +88,11 @@ def run(node, action_name):
                 # we have an appropriate client
                 if newNode.data is None:
                     if newNode.node_type in client_list:
-                        client_list[newNode.node_type].get_data(newNode)
+                        try:
+                            client_list[newNode.node_type].get_data(newNode)
+                        except Exception as e:
+                            print(e)
+                            print(traceback.format_exc())
                     else:
                         newNode.data = {}
     except Exception as e:

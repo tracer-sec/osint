@@ -1,4 +1,3 @@
-import whois
 import httplib
 import urlparse
 import model
@@ -28,17 +27,9 @@ def get_domain(node):
     else:
         result = urlparse.urlparse(node.name)
         domain = result.netloc
-    n = model.Node('domain', domain, {})
+    n = model.Node('domain', domain, None)
     return [n]
 
-def get_whois(node):
-    try:
-        whois_info = whois.lookup(node.name, True)
-        node.data['whois'] = whois_info
-    except Exception as e:
-        print(e)
-    return []
-    
 
 def get_http_server_headers(node):
     # HEAD request to server
@@ -80,11 +71,6 @@ def get(config):
             'func': get_domain,
             'name': 'Domain',
             'acts_on': ['website', 'email']
-        },
-        {
-            'func': get_whois,
-            'name': 'Whois',
-            'acts_on': ['domain']
         },
         {
             'func': get_http_server_headers,

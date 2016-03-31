@@ -69,7 +69,7 @@ def get_reddit_stats(node):
     return []
     
 
-def get(config):
+def get(config, c):
     global client
     client = RedditClient()
     

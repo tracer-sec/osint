@@ -65,7 +65,7 @@ for r in SOCIAL_MEDIA_URLS.keys():
     SOCIAL_MEDIA_URLS[r] = re.compile(SOCIAL_MEDIA_URLS[r])
 
 
-def get(config):
+def get(config, c):
     return [
         {
             'func': get_domain,

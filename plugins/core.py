@@ -44,7 +44,7 @@ if __name__ == '__main__':
     print(result)
 
 
-def get(config):
+def get(config, c):
     return [
         {
             'func': get_emails,

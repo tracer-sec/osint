@@ -30,7 +30,7 @@ class TwitterClient(object):
         if target in self.profile_cache:
             result = self.profile_cache[target]
         else:
-            result = self.make_request('GET', '/1.1/users/show.json', { 'screen_name': node.name, 'stringify_ids': True })
+            result = self.make_request('GET', '/1.1/users/show.json', { 'screen_name': target, 'stringify_ids': True })
             self.profile_cache[result['screen_name']] = result
         return model.Node('twitter', result['screen_name'], result)
     
@@ -42,6 +42,9 @@ class TwitterClient(object):
             self.profile_cache[result['screen_name']] = result
         node.data = result
 
+    def get_followers(self, screen_name):
+        return self.make_request('GET', '/1.1/followers/list.json', { 'screen_name': screen_name, 'skip_status': True, 'include_user_entities': True })
+    
     def get_lists(self, screen_name):
         return self.make_request('GET', '/1.1/lists/list.json', { 'screen_name': screen_name })
         

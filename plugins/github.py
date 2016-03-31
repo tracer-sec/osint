@@ -54,7 +54,7 @@ def get_github_followers(node):
         return result
 
 
-def get(config):
+def get(config, c):
     global client
     client = GithubClient()
     

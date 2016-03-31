@@ -45,11 +45,9 @@ def load_all(config_name):
     for py_file in py_files:
         try:
             plugin = load(py_file, 'plugins')
-            # TODO: dictionary lookup that returns None on failure?
-            if plugin.__name__ in config:
-                actions = plugin.get(config[plugin.__name__])
-            else:
-                actions = plugin.get(None)
+            con = config[plugin.__name__] if plugin.__name__ in config else None
+            cli = client_list[plugin.__name__] if plugin.__name__ in client_list else None
+            actions = plugin.get(con, cli)
             print('* {0} - ({1})'.format(plugin.__name__, len(actions)))
             action_list.extend(actions)
         except Exception as ex:

@@ -2,18 +2,9 @@ import httplib
 import urlparse
 import model
 import re
-import webclient
 
-BORING_HEADERS = [
-    'etag',
-    'content-length',
-    'content-type',
-    'date',
-    'expires',
-    'pragma',
-    'vary',
-    'cache-control'
-]
+client = None
+
 
 SOCIAL_MEDIA_URLS = {
     'twitter': 'https?://twitter.com/([A-Za-z0-9_-]+)',
@@ -30,42 +21,17 @@ def get_domain(node):
     n = model.Node('domain', domain, None)
     return [n]
 
-
 def get_http_server_headers(node):
-    # HEAD request to server
-    # Grab headers from response
-    u = urlparse.urlparse(node.name)
-    if u.scheme == 'http':
-        connection = httplib.HTTPConnection(u.netloc)
-    elif u.scheme == 'https':
-        connection = httplib.HTTPSConnection(u.netloc)
-        
-    connection.request('HEAD', '/')
-    response = connection.getresponse()
-    headers = response.getheaders()
-    connection.close()
-
-    # Filter out dull headers and add to the original node
-    node.data['headers'] = filter(lambda x: x[0] not in BORING_HEADERS, headers)
+    client.get_http_server_headers(node)
     return []
 
-
 def get_social_links(node):
-    client = webclient.WebClient(node.name)
-    links = client.get_links()
-    result = []
-    for link in links:
-        for r in SOCIAL_MEDIA_URLS.keys():
-            m = SOCIAL_MEDIA_URLS[r].match(link)
-            if m is not None:
-                result.append(model.Node(r, m.group(1), None))
-    return result
-
-for r in SOCIAL_MEDIA_URLS.keys():
-    SOCIAL_MEDIA_URLS[r] = re.compile(SOCIAL_MEDIA_URLS[r])
-
+    return client.get_social_links(node)
 
 def get(config, c):
+    global client
+    client = c
+
     return [
         {
             'func': get_domain,

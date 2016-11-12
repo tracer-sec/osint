@@ -1,41 +1,14 @@
-import httplib
-import json
 import model
 
 client = None
 
-class GithubClient(object):
-    def __init__(self):
-        pass # oauth not really necessary if we're just doing queries
-        
-    def get_profile(self, username):
-        result = self.make_request('GET', '/users/{0}'.format(username), {})
-        if result is None:
-            return None
-        else:
-            return model.Node('github', result['login'], { 'profile': result })
-            
-    def get_followers(self, username):
-        result = self.make_request('GET', '/users/{0}/followers'.format(username), {})
-        return result
-        
-    def make_request(self, method, url, params):
-        connection = httplib.HTTPSConnection('api.github.com')
-        connection.request(method, url, headers = {'User-Agent': 'tracer-sec/osint', 'Accept': 'application/vnd.github.v3+json'})
-        response = connection.getresponse()
-        if response.status == 200:
-            return json.load(response)
-        else:
-            return None
-
-            
 def get_github_profile(node):
-    n = client.get_profile(node.name)
+    n = client.get_node(node.name)
     if n is None:
         return []
     else:
         return [n]
-        
+
         
 def get_github_url(node):
     if 'profile' in node.data and 'blog' in node.data['profile'] and node.data['profile']['blog'] is not None:
@@ -56,7 +29,7 @@ def get_github_followers(node):
 
 def get(config, c):
     global client
-    client = GithubClient()
+    client = c
     
     return [
         {

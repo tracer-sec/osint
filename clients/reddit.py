@@ -6,7 +6,7 @@ class RedditClient(object):
     def __init__(self):
         pass # oauth not really necessary if we're just doing queries
         
-    def get_profile(self, username):
+    def get_node(self, username):
         result = self.make_request('GET', '/user/{0}/about.json'.format(username), {})
         if 'kind' in result:
             del result['kind']
@@ -14,6 +14,10 @@ class RedditClient(object):
             return model.Node('reddit', result['data']['name'], result)
         else:
             return None
+
+    def get_data(self, node):
+        result = self.make_request('GET', '/user/{0}/about.json'.format(node.name), {})
+        node.data = result
         
     def make_request(self, method, url, params):
         connection = httplib.HTTPSConnection('www.reddit.com')

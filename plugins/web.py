@@ -5,12 +5,6 @@ import re
 
 client = None
 
-
-SOCIAL_MEDIA_URLS = {
-    'twitter': 'https?://twitter.com/([A-Za-z0-9_-]+)',
-    'github': 'https?://github.com/([A-Za-z0-9_-]+)'
-}
-
 def get_domain(node):
     if '@' in node.name:
         # it's an email address

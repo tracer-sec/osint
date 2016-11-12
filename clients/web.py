@@ -12,7 +12,9 @@ SOCIAL_MEDIA_URLS = {
     'facebook': '^https?://www.facebook.com/([A-Za-z0-9_-]+)',
     'instagram': '^https?://instagram.com/([A-Za-z0-9_-]+)', 
     'plus': '^https?://plus.google.com/([0-9]+)',
-    'youtube': '^https?://www.youtube.com/user/([A-Za-z0-9_-]+)'
+    'youtube': '^https?://www.youtube.com/user/([A-Za-z0-9_-]+)',
+    'reddit': '^https?://www.reddit.com/user/([A-Za-z0-9_-]+)/?',
+    'email': '^mailto:(.+)'
 }
 
 BORING_HEADERS = [
@@ -33,7 +35,7 @@ class WebClient(object):
             self.social_regex[r] = re.compile(SOCIAL_MEDIA_URLS[r])
 
     def get_node(self, target):
-        return model.Node('website', node, {})
+        return model.Node('website', target, {})
 
     def get_data(self, node):
         pass
@@ -114,7 +116,7 @@ class WebClient(object):
 
 if __name__ == '__main__':
     client = WebClient()
-    links = client._get_links(sys.argv[1])
+    links = client.get_social_links(sys.argv[1])
     print(links)
     print('\n------------------------------------\n')
     print(etree.dump(client._get__html(sys.argv[1])))

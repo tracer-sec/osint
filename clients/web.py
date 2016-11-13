@@ -14,7 +14,7 @@ SOCIAL_MEDIA_URLS = {
     'plus': '^https?://plus.google.com/([0-9]+)',
     'youtube': '^https?://www.youtube.com/user/([A-Za-z0-9_-]+)',
     'reddit': '^https?://www.reddit.com/user/([A-Za-z0-9_-]+)/?',
-    'email': '^mailto:(.+)'
+    'email': '^mailto:([A-Za-z0-9@_.+-]+)' # close enough
 }
 
 BORING_HEADERS = [
@@ -116,7 +116,7 @@ class WebClient(object):
 
 if __name__ == '__main__':
     client = WebClient()
-    links = client.get_social_links(sys.argv[1])
+    links = client.get_social_links(model.Node('website', sys.argv[1], {}))
     print(links)
     print('\n------------------------------------\n')
     print(etree.dump(client._get__html(sys.argv[1])))

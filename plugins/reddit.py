@@ -3,7 +3,7 @@ import model
 client = None
             
 def get_reddit_profile(node):
-    n = client.get_profile(node.name)
+    n = client.get_node(node.name)
     if n is None:
         return []
     else:

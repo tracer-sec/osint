@@ -11,7 +11,7 @@ def get_github_profile(node):
 
         
 def get_github_url(node):
-    if 'profile' in node.data and 'blog' in node.data['profile'] and node.data['profile']['blog'] is not None:
+    if 'profile' in node.data and 'blog' in node.data['profile'] and node.data['profile']['blog'] is not None and len(node.data['profile']['blog']) > 0:
         return [model.Node('website', node.data['profile']['blog'])]
     else:
         return []

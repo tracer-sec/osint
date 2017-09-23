@@ -204,18 +204,14 @@ def lookup(target, recurse=False, server=None):
         data = data + d
         d = s.recv(4096)
     s.close()
-    
+   
     if recurse:
-        # Since whois.verisign-grs.com now returns multiple hits, ignore any 'matches' that 
-        # don't - you know - match, and only start looking for the next whois server from
-        # that point on
-        theatrical_sigh = re.search('^\s*domain name:\s*([a-z0-9.-]+)$', data, re.MULTILINE | re.IGNORECASE)
-        start_index = 0 if theatrical_sigh is None else theatrical_sigh.end(1)
-        next_server = re.search('^\s*whois server:\s*([a-z0-9.-]+)$', data[start_index:], re.MULTILINE | re.IGNORECASE)
+        next_server = re.search('^\s*(?:registrar\s+)?whois\s+server:\s*([a-z0-9.-]+)\s*$', data, re.MULTILINE | re.IGNORECASE)
         if next_server is not None:
             data = lookup(target, False, next_server.group(1))
     
     return data
+
 
 class DomainClient(object):
     def __init__(self, config):
@@ -233,6 +229,14 @@ class DomainClient(object):
             result = { 'whois': lookup(node.name, True) }
             self.cache[node.name] = result
         node.data = result
+
+    def domain_exists(self, hostname):
+        try:
+            socket.gethostbyname(hostname)
+        except socket.gaierror:
+            return False
+        return True
+
 
 def get(config):
     return DomainClient(config)

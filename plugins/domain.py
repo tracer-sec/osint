@@ -8,6 +8,9 @@ SUBDOMAINS = [
     'img',
     'cdn',
     'content',
+    'cms',
+    'admin',
+    'panel',
 
     'mail',
     'pop3',
@@ -132,6 +135,15 @@ def guess_subdomains(node):
 
     return results
 
+
+def convert_to_website(node):
+    return [model.Node('website', 'http://' + node.name)]
+
+
+def get_parent_domain(node):
+    return [model.Node('domain', node.name[node.name.index('.') + 1:])]
+
+
 def get(config, c):
     global client
     client = c
@@ -140,6 +152,16 @@ def get(config, c):
         {
             'func': guess_subdomains,
             'name': 'Test for common subdomains',
+            'acts_on': ['domain']
+        },
+        {
+            'func': convert_to_website,
+            'name': 'Attempt to derive a website from a domain',
+            'acts_on': ['domain']
+        },
+        {
+            'func': get_parent_domain,
+            'name': 'Get parent domain',
             'acts_on': ['domain']
         }
     ]

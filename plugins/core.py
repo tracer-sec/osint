@@ -53,7 +53,7 @@ def get(config, c):
         },
         {
             'func': convert_to_person,
-            'name': 'Convert any convert any node to a person',
+            'name': 'Convert any node to a person',
             'acts_on': ['*']
         }
     ]
